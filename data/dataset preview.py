@@ -43,3 +43,120 @@ X_resampled, y_resampled = smote.fit_resample(X, y)
 # Check new class distribution
 new_counts = Counter(y_resampled)
 print("After SMOTE:", new_counts)
+
+
+# test split
+
+from sklearn.model_selection import train_test_split
+
+# Split into training (80%) and testing (20%) sets
+X_train, X_test, y_train, y_test = train_test_split(X_resampled, y_resampled, test_size=0.2, random_state=42, stratify=y_resampled)
+
+# Check the shape
+print("Train set size:", X_train.shape, y_train.shape)
+print("Test set size:", X_test.shape, y_test.shape)
+
+# Normalize the data
+
+from sklearn.preprocessing import StandardScaler
+
+# Initialize scaler
+scaler = StandardScaler()
+
+# Fit on training data and transform both train & test sets
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# Check shape
+print("Scaled Train Data Shape:", X_train_scaled.shape)
+print("Scaled Test Data Shape:", X_test_scaled.shape)
+
+# Train the module
+
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+# Initialize the model
+rf_model = RandomForestClassifier(n_estimators=100, random_state=42)
+
+# Train the model
+rf_model.fit(X_train, y_train)
+
+# Make predictions
+y_pred = rf_model.predict(X_test)
+
+# Evaluate the model
+accuracy = accuracy_score(y_test, y_pred)
+conf_matrix = confusion_matrix(y_test, y_pred)
+class_report = classification_report(y_test, y_pred)
+
+print(f"Model Accuracy: {accuracy * 100:.2f}%")
+print("\nConfusion Matrix:\n", conf_matrix)
+print("\nClassification Report:\n", class_report)
+
+
+# feature importance
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Get feature importances
+importances = rf_model.feature_importances_
+feature_names = X_train.columns
+indices = np.argsort(importances)[::-1]  # Sort in descending order
+
+# Plot feature importances
+plt.figure(figsize=(10, 5))
+plt.title("Feature Importance - Random Forest")
+plt.bar(range(len(importances)), importances[indices], align="center")
+plt.xticks(range(len(importances)), feature_names[indices], rotation=90)
+plt.xlabel("Feature")
+plt.ylabel("Importance Score")
+plt.show()
+
+# hyperperameter tuning 
+
+from sklearn.model_selection import GridSearchCV
+
+# Define parameter grid
+param_grid = {
+    'n_estimators': [50, 100, 200],
+    'max_depth': [10, 20, None],
+    'min_samples_split': [2, 5, 10],
+    'min_samples_leaf': [1, 2, 4]
+}
+
+# Initialize model
+rf = RandomForestClassifier(random_state=42)
+
+# Grid search
+grid_search = GridSearchCV(rf, param_grid, cv=3, scoring='accuracy', n_jobs=-1)
+grid_search.fit(X_train, y_train)
+
+# Best parameters
+print("Best Parameters:", grid_search.best_params_)
+
+# Train the model with best parameters
+best_rf = grid_search.best_estimator_
+best_rf.fit(X_train, y_train)
+
+# Predictions & Evaluation
+y_pred_best = best_rf.predict(X_test)
+accuracy_best = accuracy_score(y_test, y_pred_best)
+print(f"Improved Accuracy: {accuracy_best * 100:.2f}%")
+
+
+# traingng xgboost
+
+from xgboost import XGBClassifier
+from sklearn.metrics import accuracy_score
+
+# Train XGBoost Model
+xgb_model = XGBClassifier(n_estimators=100, learning_rate=0.1, max_depth=5, random_state=42)
+xgb_model.fit(X_train, y_train)
+
+# Predict with XGBoost
+y_pred_xgb = xgb_model.predict(X_test)
+
+# Print Accuracy
+print("XGBoost Accuracy:", accuracy_score(y_test, y_pred_xgb) * 100)
