@@ -71,7 +71,7 @@ X_test_scaled = scaler.transform(X_test)
 print("Scaled Train Data Shape:", X_train_scaled.shape)
 print("Scaled Test Data Shape:", X_test_scaled.shape)
 
-# Train the module
+# Train the module random forest
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
@@ -145,18 +145,20 @@ y_pred_best = best_rf.predict(X_test)
 accuracy_best = accuracy_score(y_test, y_pred_best)
 print(f"Improved Accuracy: {accuracy_best * 100:.2f}%")
 
+# module catboost
 
-# traingng xgboost
-
-from xgboost import XGBClassifier
+from catboost import CatBoostClassifier
 from sklearn.metrics import accuracy_score
 
-# Train XGBoost Model
-xgb_model = XGBClassifier(n_estimators=100, learning_rate=0.1, max_depth=5, random_state=42)
-xgb_model.fit(X_train, y_train)
+# Initialize CatBoost model
+cat_model = CatBoostClassifier(iterations=200, depth=6, learning_rate=0.1, verbose=False)
 
-# Predict with XGBoost
-y_pred_xgb = xgb_model.predict(X_test)
+# Train the model
+cat_model.fit(X_train[:5000], y_train[:5000])
 
-# Print Accuracy
-print("XGBoost Accuracy:", accuracy_score(y_test, y_pred_xgb) * 100)
+# Predictions
+y_pred = cat_model.predict(X_test)
+
+# Accuracy
+accuracy = accuracy_score(y_test, y_pred)
+print(f"CatBoost Accuracy: {accuracy * 100:.2f}%")
